@@ -52,3 +52,21 @@ hmidity_block = aio.feeds('humidity-block')
 soil_block = aio.feeds('soil-block')
 light_block = aio.feeds('light-block')
 
+
+print("Starting the sensors...")
+print("Reading the sensor values...")
+while True:
+    # read the temperature
+    temperature = read_temp()
+    print("Temperature: ", temperature)
+    # send the temperature to the temperature feed
+    aio.send_data(temperature_feed.key, read_temp())
+    # send the humdiity to the humidity guage
+    aio.send_data(humidity_gauge.key, read_humidity())
+    # send the soil moisture to the soil guage
+    aio.send_data(soil_gauge.key, read_soil())
+    # send the light to the light guage
+    aio.send_data(light_gauge.key, read_light())
+
+
+
