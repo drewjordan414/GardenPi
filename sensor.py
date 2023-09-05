@@ -7,6 +7,7 @@ import time
 import adafruit_tsl2591
 from time import sleep
 from random import randrange
+import camera
 
 
 # Create library object using our Bus I2C port

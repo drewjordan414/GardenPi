@@ -7,6 +7,11 @@ from torch.utils.data.sampler import SubsetRandomSampler
 import torch.nn as nn
 import torch.nn.functional as F
 from datetime import datetime
+# import library for training on GPU 
+# https://developer.nvidia.com/cuda-downloads
+
+# link to model repo----> https://github.com/manthan89-py/Plant-Disease-Detection/blob/main/Model/Plant%20Disease%20Detection%20Code.ipynb
+
 
 # %load_exit nb_black ----> black formatter matlab
 
