@@ -5,6 +5,9 @@ import adafruit_seesaw
 import adafruit_sht4x
 import time 
 import adafruit_tsl2591
+from time import sleep
+from random import randrange
+
 
 # Create library object using our Bus I2C port
 i2c = busio.I2C(board.SCL,board.SDA)
@@ -34,6 +37,9 @@ aio_usermname = "YOUR_ADAFRUIT_IO_USERNAME"
 aio_key = "YOUR_ADAFRUIT_IO_KEY"
 aio = Client(aio_usermname, aio_key)
 
+# Create a group dashboard 
+dashboard = aio.create_dashboard(name="Sensor Dashboard")
+
 # Create a feed
 temperature_feed = aio.feeds('temperature')
 humiditiy_feed = aio.feeds('humidity')
@@ -55,6 +61,32 @@ light_block = aio.feeds('light-block')
 
 print("Starting the sensors...")
 print("Reading the sensor values...")
+
+# create a text stream for the gauges 
+stream = Block(name="Stream Data",
+               visual_type = 'stream',
+               properties = {
+                   "fontSize": "12",
+                   "fontColor": "#63de00",
+                   "showGroupName": "no"},
+               block_feeds = [{
+                #    "group_id": group.id,  -------> update 
+                #    "feed_id":  feed.id    -------> update
+               }])
+stream = aio.create_block(dashboard.key, stream)
+
+
+
+value = 0 
+while True:
+    value = (value + randrange(0, 10)) % 100
+    print('sending data: ', value)
+    # aio.send_data(feed.key, value)  -------> update
+    sleep(3)
+    break
+
+
+# send the data to the feeds
 while True:
     # read the temperature
     temperature = read_temp()
@@ -67,6 +99,7 @@ while True:
     aio.send_data(soil_gauge.key, read_soil())
     # send the light to the light guage
     aio.send_data(light_gauge.key, read_light())
+
 
 
 
