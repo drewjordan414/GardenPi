@@ -37,4 +37,12 @@ train_loader = torch.utils.data.DataLoader(
     dataset, batch_size=20, sampler=train, num_workers=0
 )
 
+print(1, validation , split, train_idx, valid_idx, len(train_idx), len(valid_idx))
+valid_loader = torch._utils.data.DataLoader(
+    dataset, batch_size=20, sampler= validation, num_workers=0
+)
+
+print(2, validation , split, train_idx, valid_idx, len(train_idx), len(valid_idx))
+test_loader = torch.utils.data.Dataloader(dataset, batch_size = 20, num_workers = 0)
+
 
