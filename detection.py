@@ -56,7 +56,8 @@ model = CNN(num_classes=num_classes).to(device)
 criterion = nn.CrossEntropyLoss()
 optimizer = optim.Adam(model.parameters(), lr=0.001)
 
-epochs = 5
+# number of epochs to train the model
+epochs = 10
 for epoch in range(epochs):
     model.train()
     total_loss = 0.0
