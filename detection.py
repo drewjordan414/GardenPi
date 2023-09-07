@@ -1,221 +1,96 @@
-import numpy as np
-import pandas as pd
-import matplotlib.pyplot as plt
+# housekeeping 
 import torch
-from torchvision import datasets, transforms, models  # datsets  , transforms
-from torch.utils.data.sampler import SubsetRandomSampler
 import torch.nn as nn
-import torch.nn.functional as F
-from datetime import datetime
-import os
+import torch.optim as optim
+from torchvision import datasets, transforms
+from torch.utils.data import DataLoader
 
-transform = transforms.Compose(
-    [transforms.Resize(255), transforms.CenterCrop(224), transforms.ToTensor()]
-)
-dataset = datasets.ImageFolder("Dataset", transform=transform)
-dataset
-indices = list(range(len(dataset)))
-split = int(np.floor(0.85 * len(dataset)))  # train_size
-validation = int(np.floor(0.70 * split))  # validation
-print(0, validation, split, len(dataset))
-print(f"length of train size :{validation}")
-print(f"length of validation size :{split - validation}")
-print(f"length of test size :{len(dataset)-validation}")
+# Check if CUDA is available and set device accordingly
+device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+print("Using device:", device)
 
-np.random.shuffle(indices)
-train_indices, validation_indices, test_indices = (
-    indices[:validation],
-    indices[validation:split],
-    indices[split:],
-)
+# data preprocessing
+data_transforms = transforms.Compose([
+    transforms.Resize(256),
+    transforms.CenterCrop(224),
+    transforms.ToTensor(),
+    transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
+])
 
+# Assuming the directory has subdirectories, each corresponding to a class
+data_dir = '/Users/drewjordan/Downloads/Plant-Disease-Detection-main/test_images'
+dataset = datasets.ImageFolder(data_dir, transform=data_transforms)
 
-train_sampler = SubsetRandomSampler(train_indices)
-validation_sampler = SubsetRandomSampler(validation_indices)
-test_sampler = SubsetRandomSampler(test_indices)
+# Splitting dataset into training and validation
+train_size = int(0.8 * len(dataset))
+val_size = len(dataset) - train_size
+train_dataset, val_dataset = torch.utils.data.random_split(dataset, [train_size, val_size])
 
-targets_size = len(dataset.class_to_idx)
+train_loader = DataLoader(train_dataset, batch_size=32, shuffle=True)
+val_loader = DataLoader(val_dataset, batch_size=32, shuffle=True)
 
-# model
+# model definition
 class CNN(nn.Module):
-    def __init__(self, K):
+    def __init__(self, num_classes):
         super(CNN, self).__init__()
-        self.conv_layers = nn.Sequential(
-            # conv1
-            nn.Conv2d(in_channels=3, out_channels=32, kernel_size=3, padding=1),
-            nn.ReLU(),
-            nn.BatchNorm2d(32),
-            nn.Conv2d(in_channels=32, out_channels=32, kernel_size=3, padding=1),
-            nn.ReLU(),
-            nn.BatchNorm2d(32),
-            nn.MaxPool2d(2),
-            # conv2
-            nn.Conv2d(in_channels=32, out_channels=64, kernel_size=3, padding=1),
-            nn.ReLU(),
-            nn.BatchNorm2d(64),
-            nn.Conv2d(in_channels=64, out_channels=64, kernel_size=3, padding=1),
-            nn.ReLU(),
-            nn.BatchNorm2d(64),
-            nn.MaxPool2d(2),
-            # conv3
-            nn.Conv2d(in_channels=64, out_channels=128, kernel_size=3, padding=1),
-            nn.ReLU(),
-            nn.BatchNorm2d(128),
-            nn.Conv2d(in_channels=128, out_channels=128, kernel_size=3, padding=1),
-            nn.ReLU(),
-            nn.BatchNorm2d(128),
-            nn.MaxPool2d(2),
-            # conv4
-            nn.Conv2d(in_channels=128, out_channels=256, kernel_size=3, padding=1),
-            nn.ReLU(),
-            nn.BatchNorm2d(256),
-            nn.Conv2d(in_channels=256, out_channels=256, kernel_size=3, padding=1),
-            nn.ReLU(),
-            nn.BatchNorm2d(256),
-            nn.MaxPool2d(2),
+        self.features = nn.Sequential(
+            nn.Conv2d(3, 64, kernel_size=3, stride=1, padding=1),
+            nn.ReLU(inplace=True),
+            nn.MaxPool2d(kernel_size=2, stride=2),
+            nn.Conv2d(64, 128, kernel_size=3, stride=1, padding=1),
+            nn.ReLU(inplace=True),
+            nn.MaxPool2d(kernel_size=2, stride=2)
         )
+        self.classifier = nn.Linear(128 * 56 * 56, num_classes)
 
-        self.dense_layers = nn.Sequential(
-            nn.Dropout(0.4),
-            nn.Linear(50176, 1024),
-            nn.ReLU(),
-            nn.Dropout(0.4),
-            nn.Linear(1024, K),
-        )
+    def forward(self, x):
+        x = self.features(x)
+        x = x.view(x.size(0), -1)
+        x = self.classifier(x)
+        return x
 
-    def forward(self, X):
-        out = self.conv_layers(X)
+num_classes = len(dataset.classes)
+model = CNN(num_classes=num_classes).to(device)
 
-        # Flatten
-        out = out.view(-1, 50176)
+# training config 
+criterion = nn.CrossEntropyLoss()
+optimizer = optim.Adam(model.parameters(), lr=0.001)
 
-        # Fully connected
-        out = self.dense_layers(out)
+epochs = 5
+for epoch in range(epochs):
+    model.train()
+    total_loss = 0.0
+    
+    for inputs, labels in train_loader:
+        inputs, labels = inputs.to(device), labels.to(device)
 
-        return out
-
-device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-print(device)
-
-device = "cpu"
-
-model = CNN(targets_size)
-
-model.to(device)
-
-from torchsummary import summary
-
-summary(model, (3, 224, 224))
-
-criterion = nn.CrossEntropyLoss()  # this include softmax + cross entropy loss
-optimizer = torch.optim.Adam(model.parameters())
-
-# batch gradient 
-def batch_gd(model, criterion, train_loader, test_laoder, epochs):
-    train_losses = np.zeros(epochs)
-    test_losses = np.zeros(epochs)
-
-    for e in range(epochs):
-        t0 = datetime.now()
-        train_loss = []
-        for inputs, targets in train_loader:
-            inputs, targets = inputs.to(device), targets.to(device)
-
-            optimizer.zero_grad()
-
-            output = model(inputs)
-
-            loss = criterion(output, targets)
-
-            train_loss.append(loss.item())  # torch to numpy world
-
-            loss.backward()
-            optimizer.step()
-
-        train_loss = np.mean(train_loss)
-
-        validation_loss = []
-
-        for inputs, targets in validation_loader:
-
-            inputs, targets = inputs.to(device), targets.to(device)
-
-            output = model(inputs)
-
-            loss = criterion(output, targets)
-
-            validation_loss.append(loss.item())  # torch to numpy world
-
-        validation_loss = np.mean(validation_loss)
-
-        train_losses[e] = train_loss
-        validation_losses[e] = validation_loss
-
-        dt = datetime.now() - t0
-
-        print(
-            f"Epoch : {e+1}/{epochs} Train_loss:{train_loss:.3f} Test_loss:{validation_loss:.3f} Duration:{dt}"
-        )
-
-    return train_losses, validation_losses
-
-device = "cpu"
-
-batch_size = 64
-train_loader = torch.utils.data.DataLoader(
-    dataset, batch_size=batch_size, sampler=train_sampler
-)
-test_loader = torch.utils.data.DataLoader(
-    dataset, batch_size=batch_size, sampler=test_sampler
-)
-validation_loader = torch.utils.data.DataLoader(
-    dataset, batch_size=batch_size, sampler=validation_sampler
-)
-
-train_losses, validation_losses = batch_gd(
-    model, criterion, train_loader, validation_loader, 5
-)
-
-# save the model
-# torch.save(model.state_dict() , 'plant_disease_model_1.pt')
-
-
-# load the model
-targets_size = 39
-model = CNN(targets_size)
-model.load_state_dict(torch.load("plant_disease_model_1_latest.pt"))
-model.eval()
-
-# plot the loss
-plt.plot(train_losses , label = 'train_loss')
-plt.plot(validation_losses , label = 'validation_loss')
-plt.xlabel('No of Epochs')
-plt.ylabel('Loss')
-plt.legend()
-plt.show()
-
-# accuracy 
-def accuracy(loader):
-    n_correct = 0
-    n_total = 0
-
-    for inputs, targets in loader:
-        inputs, targets = inputs.to(device), targets.to(device)
-
+        optimizer.zero_grad()
         outputs = model(inputs)
+        loss = criterion(outputs, labels)
+        loss.backward()
+        optimizer.step()
 
-        _, predictions = torch.max(outputs, 1)
+        total_loss += loss.item() * inputs.size(0)
+    
+    avg_train_loss = total_loss / len(train_loader.dataset)
+    print(f"Epoch [{epoch + 1}/{epochs}] Loss: {avg_train_loss:.4f}")
 
-        n_correct += (predictions == targets).sum().item()
-        n_total += targets.shape[0]
+# validation 
+model.eval()
+correct = 0
+total = 0
+with torch.no_grad():
+    for inputs, labels in val_loader:
+        inputs, labels = inputs.to(device), labels.to(device)
+        outputs = model(inputs)
+        _, predicted = torch.max(outputs.data, 1)
+        total += labels.size(0)
+        correct += (predicted == labels).sum().item()
 
-    acc = n_correct / n_total
-    return acc
+print(f'Validation Accuracy: {100 * correct / total}%')
 
-train_acc = accuracy(train_loader)
-test_acc = accuracy(test_loader)
-validation_acc = accuracy(validation_loader)
-
-print(
-    f"Train Accuracy : {train_acc}\nTest Accuracy : {test_acc}\nValidation Accuracy : {validation_acc}"
-)
+# save model
+torch.save(model, 'path_to_save_model.pth')
+# load the model
+loaded_model = torch.load('path_to_save_model.pth')
+loaded_model.eval()
