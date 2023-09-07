@@ -18,7 +18,7 @@ data_transforms = transforms.Compose([
 ])
 
 # Assuming the directory has subdirectories, each corresponding to a class
-data_dir = '/Users/drewjordan/Downloads/Plant-Disease-Detection-main/test_images'
+data_dir = 'test_images'
 dataset = datasets.ImageFolder(data_dir, transform=data_transforms)
 
 # Splitting dataset into training and validation
