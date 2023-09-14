@@ -34,8 +34,8 @@ def read_light():
     return tsl.lux
 
 # Create a aio instance using the username and key
-aio_usermname = "YOUR_ADAFRUIT_IO_USERNAME"
-aio_key = "YOUR_ADAFRUIT_IO_KEY"
+aio_usermname = "drewjordan404"
+aio_key = "aio_yLTU67hx5k4BWblarFgy6OAtGNDV"
 aio = Client(aio_usermname, aio_key)
 
 # Create a group dashboard 

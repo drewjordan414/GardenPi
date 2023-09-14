@@ -39,7 +39,10 @@ class CNN(nn.Module):
             nn.MaxPool2d(kernel_size=2, stride=2),
             nn.Conv2d(64, 128, kernel_size=3, stride=1, padding=1),
             nn.ReLU(inplace=True),
-            nn.MaxPool2d(kernel_size=2, stride=2)
+            nn.MaxPool2d(kernel_size=2, stride=2),
+            # CONV => RELU => POOL
+            # first set of CONV => RELU => POOL layers
+            
         )
         self.classifier = nn.Linear(128 * 56 * 56, num_classes)
 
@@ -49,6 +52,7 @@ class CNN(nn.Module):
         x = self.classifier(x)
         return x
 
+
 num_classes = len(dataset.classes)
 model = CNN(num_classes=num_classes).to(device)
 
@@ -57,7 +61,7 @@ criterion = nn.CrossEntropyLoss()
 optimizer = optim.Adam(model.parameters(), lr=0.001)
 
 # number of epochs to train the model
-epochs = 10
+epochs = 20
 for epoch in range(epochs):
     model.train()
     total_loss = 0.0
