@@ -1,19 +1,49 @@
-# housekeeping 
-import os
-import cv2 
-import time 
-from time import sleep
-# import the necessary packages
-# from picamera.array import PiRGBArray
-# from picamera import PiCamera
+# housekeeping
+import tensorflow as tf
+import cv2
+import numpy as np
+import tensorflow_hub as hub
+import ssl
+import urllib.request
 
-# setup the camera
-camera = cv2.VideoCapture("/dev/video0") # ----> use cd /dev && ls to find the video device
-cv2.VideoCapture(0) # ----> use this if you are using a webcam on device 0 
-camera.set(cv2.CAP_PROP_FRAME_WIDTH, 640)
-camera.set(cv2.CAP_PROP_FRAME_HEIGHT, 480)
-# camera.resolution = (640, 480)
-camera.framerate = 32
+ssl._create_default_https_context = ssl._create_unverified_context
+# Load the saved model
+# model_path = 'model/saved_model.pb'
+model = hub.load("https://www.kaggle.com/models/rishitdagli/plant-disease/frameworks/TensorFlow2/variations/plant-disease/versions/1")
 
-# import and use CNN
+# Optional: If the model has a specific signature for serving
+# infer = model.signatures["serving_default"]
+
+def capture_image_from_camera():
+    """Capture image from the default camera and return it."""
+    cap = cv2.VideoCapture(0)  # 0 for default camera
+    if not cap.isOpened():
+        print("Cannot open camera")
+        exit()
+    ret, frame = cap.read()
+    cap.release()
+    if not ret:
+        print("Can't receive frame (stream end?). Exiting ...")
+        exit()
+    return frame
+
+def preprocess_image(image, target_size=(224, 224)):
+    """Preprocess the image for the model."""
+    image = cv2.resize(image, target_size)
+    image = tf.convert_to_tensor(image)
+    image = tf.image.convert_image_dtype(image, tf.float32)
+    return tf.expand_dims(image, axis=0)  # Expand dims to make it a batch of size 1
+
+def predict_deficiency(image):
+    """Predict the nutrient deficiency using the loaded model."""
+    processed_image = preprocess_image(image)
+    predictions = model(processed_image)
+    # Assuming model returns class probabilities
+    predicted_class = tf.argmax(predictions, axis=1).numpy()[0]
+    return predicted_class
+
+if __name__ == "__main__":
+    image = capture_image_from_camera()
+    result = predict_deficiency(image)
+    print(f"Predicted Nutrient Deficiency: {result}")
 
