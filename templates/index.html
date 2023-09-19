@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Plant Health Monitoring</title>
+</head>
+<body>
+    <h1>Plant Health Monitoring</h1>
+    
+    <img src="{{ url_for('video_feed') }}" alt="Live Video Feed">
+
+    <p>Temperature: {{ temp }} °F</p>
+    <p>Humidity: {{ humidity }} %</p>
+    <p>Soil Moisture: {{ soil }}</p>
+    <p>Light: {{ light }} lux</p>
+</body>
+</html>
