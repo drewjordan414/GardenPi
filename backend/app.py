@@ -1,20 +1,14 @@
-from flask import Flask, render_template, Response
+from flask import Flask, Response, jsonify
 import cv2
 import board
 import busio 
 import adafruit_seesaw
 import adafruit_sht4x
 import adafruit_tsl2591
-from time import sleep
-from random import randrange
 import tensorflow as tf
 import numpy as np
 import tensorflow_hub as hub
-import ssl
-import urllib.request
-
-# For SSL 
-ssl._create_default_https_context = ssl._create_unverified_context
+from flask_cors import CORS
 
 # Initialize I2C sensors 
 i2c = busio.I2C(board.SCL, board.SDA)
@@ -24,6 +18,9 @@ tsl = adafruit_tsl2591.TSL2591(i2c)
 
 # Load the saved model
 model = hub.load("https://www.kaggle.com/models/rishitdagli/plant-disease/frameworks/TensorFlow2/variations/plant-disease/versions/1")
+
+app = Flask(__name__)
+CORS(app)  # Handling CORS for local development
 
 def read_temp():
     """Read the temperature in Fahrenheit from the SHT40."""
@@ -41,6 +38,17 @@ def read_light():
     """Read the light sensor value."""
     return tsl.lux
 
+@app.route('/api/sensor_data')
+def sensor_data():
+    """Provide sensor data as a JSON response."""
+    data = {
+        "temperature": read_temp(),
+        "humidity": read_humidity(),
+        "soil": read_soil(),
+        "light": read_light()
+    }
+    return jsonify(data)
+
 def preprocess_image(image, target_size=(224, 224)):
     """Preprocess the image for the model."""
     image = cv2.resize(image, target_size)
@@ -55,17 +63,6 @@ def predict_deficiency(image):
     # Assuming model returns class probabilities
     predicted_class = tf.argmax(predictions, axis=1).numpy()[0]
     return predicted_class
-
-app = Flask(__name__)
-
-@app.route('/')
-def index():
-    """Video streaming home page."""
-    return render_template('index.html', 
-                           temp=read_temp(), 
-                           humidity=read_humidity(), 
-                           soil=read_soil(), 
-                           light=read_light())
 
 def gen():
     """Generate the video stream."""
@@ -94,7 +91,7 @@ def gen():
         yield (b'--frame\r\n'
                b'Content-Type: image/jpeg\r\n\r\n' + jpeg.tobytes() + b'\r\n\r\n')
 
-@app.route('/video_feed')
+@app.route('/api/video_feed')
 def video_feed():
     """Video streaming route."""
     return Response(gen(),
