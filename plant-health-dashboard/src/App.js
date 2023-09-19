@@ -81,7 +81,7 @@
 // export default App;
 
 import React, { useState, useEffect } from 'react';
-import { Container, AppBar, Toolbar, Typography, Grid, CssBaseline, Card, CardContent } from '@material-ui/core';
+import { Container, AppBar, Toolbar, Typography, Grid, CssBaseline, Card, CardContent, Box } from '@material-ui/core';
 import { createMuiTheme, ThemeProvider } from '@material-ui/core/styles';
 import LiveVideo from './components/video';
 import SensorData from './components/sensor';
@@ -158,6 +158,11 @@ function App() {
           ))}
         </Grid>
       </Container>
+      <Box style={{ position: 'fixed', right: '1rem', bottom: '1rem' }}>
+        <Typography variant="body2">
+          Built with React by Drew
+        </Typography>
+      </Box>
     </ThemeProvider>
   );
 }
