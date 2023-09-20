@@ -55,7 +55,7 @@
 //             </Typography>
 //           </Toolbar>
 //         </AppBar>
-        
+
 //         <Grid container spacing={3}>
 //           <Grid item xs={12}>
 //             <LiveVideo />
@@ -94,6 +94,7 @@ import { createTheme, ThemeProvider } from '@material-ui/core/styles';
 import { LineChart, Line, CartesianGrid, XAxis, YAxis, Tooltip } from 'recharts';
 import LiveVideo from './components/video';
 import SensorData from './components/sensor';
+import plantLogo from './images/plantLogo.png';
 
 const theme = createTheme({
   palette: {
@@ -143,7 +144,11 @@ function App() {
       <Container>
         <AppBar position="static">
           <Toolbar>
-            <Typography variant="h6">Plant Health Monitoring</Typography>
+            <div style={{ display: 'flex', alignItems: 'center' }}>
+              <img src={plantLogo} alt="Plant Logo" style={{ width: '40px', marginRight: '10px' }} />
+              <Typography variant="h6">Dashboard</Typography>
+            </div>
+
           </Toolbar>
         </AppBar>
 
