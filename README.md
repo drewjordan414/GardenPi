@@ -12,7 +12,8 @@ Monitor your plant's health with live video analytics and various sensor reading
   - Light (in lux)
   
 - **Predictive Analysis**: Utilizing TensorFlow and TensorFlow Hub, the system can predict nutrient deficiencies from the live video feed.
-
+  - This is still a work in progress
+    
 ## Prerequisites
 
 - Python 3.8+
