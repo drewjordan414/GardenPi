@@ -9,6 +9,10 @@ import tensorflow as tf
 import numpy as np
 import tensorflow_hub as hub
 from flask_cors import CORS
+import openai
+import dotenv
+# Initialize OpenAI API read from env file
+api_key = dotenv.get_key('.env, API_KEY')
 
 # Initialize I2C sensors 
 i2c = busio.I2C(board.SCL, board.SDA)
@@ -17,10 +21,25 @@ sht = adafruit_sht4x.SHT4x(i2c)
 tsl = adafruit_tsl2591.TSL2591(i2c)
 
 # Load the saved model
-model = hub.load("https://www.kaggle.com/models/rishitdagli/plant-disease/frameworks/TensorFlow2/variations/plant-disease/versions/1")
+model = hub.load("https://tfhub.dev/rishit-dagli/plant-disease/1")
 
 app = Flask(__name__)
 CORS(app)  # Handling CORS for local development
+
+def openai_chat(query):
+    """Query the OpenAI API and return the response."""
+    response = openai.Completion.create(
+        engine="davinci",
+        prompt=query,
+        temperature=0.9,
+        max_tokens=150,
+        top_p=1,
+        frequency_penalty=0,
+        presence_penalty=0.6,
+        stop=["\n", " Human:", " AI:"]
+    )
+    return response.choices[0].text
+
 
 def read_temp():
     """Read the temperature in Fahrenheit from the SHT40."""
