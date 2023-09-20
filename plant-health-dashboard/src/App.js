@@ -90,23 +90,26 @@
 // added in graphs for sensor data
 import React, { useState, useEffect } from 'react';
 import { Container, AppBar, Toolbar, Typography, Grid, CssBaseline, Card, CardContent, Box } from '@material-ui/core';
-import { createMuiTheme, ThemeProvider } from '@material-ui/core/styles';
+import { createTheme, ThemeProvider } from '@material-ui/core/styles';
 import { LineChart, Line, CartesianGrid, XAxis, YAxis, Tooltip } from 'recharts';
 import LiveVideo from './components/video';
 import SensorData from './components/sensor';
 
-const theme = createMuiTheme({
+const theme = createTheme({
   palette: {
     primary: {
-      main: '#404258',
+      main: '#99A98F',
     },
     secondary: {
-      main: '#50577A',
+      main: '#C1D0B5',
     },
     background: {
-      default: '#6B728E',
-      paper: '#474E68',
+      default: '#D6E8DB',
+      paper: '#FFF8DE',
     },
+    // error: {
+    //   // main: '#ff7',
+    // },
   },
   typography: {
     // Adjust typography settings here if needed
