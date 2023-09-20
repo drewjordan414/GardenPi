@@ -107,13 +107,8 @@ const theme = createTheme({
       default: '#D6E8DB',
       paper: '#FFF8DE',
     },
-    // error: {
-    //   // main: '#ff7',
-    // },
   },
-  typography: {
-    // Adjust typography settings here if needed
-  },
+  typography: {},
 });
 
 function App() {
@@ -121,7 +116,7 @@ function App() {
     temperature: null,
     humidity: null,
     soil: null,
-    light: null
+    light: null,
   });
 
   useEffect(() => {
@@ -140,7 +135,6 @@ function App() {
 
   const mockData = [
     { name: 'Time1', temperature: sensorData.temperature, humidity: sensorData.humidity, soil: sensorData.soil, light: sensorData.light },
-    // Add more data points as required for demonstration purposes
   ];
 
   return (
@@ -149,12 +143,10 @@ function App() {
       <Container>
         <AppBar position="static">
           <Toolbar>
-            <Typography variant="h6">
-              Plant Health Monitoring
-            </Typography>
+            <Typography variant="h6">Plant Health Monitoring</Typography>
           </Toolbar>
         </AppBar>
-        
+
         <Grid container spacing={3}>
           <Grid item xs={12}>
             <LiveVideo />
@@ -164,7 +156,7 @@ function App() {
             {[
               { title: "Temperature", value: sensorData.temperature, unit: "°F" },
               { title: "Humidity", value: sensorData.humidity, unit: "%" },
-              { title: "Soil Moisture", value: sensorData.soil },
+              { title: "Soil Moisture", value: sensorData.soil, unit: "%" },
               { title: "Light", value: sensorData.light, unit: "lux" }
             ].map(sensor => (
               <Card key={sensor.title} style={{ marginBottom: '15px' }}>
@@ -178,13 +170,25 @@ function App() {
           <Grid item xs={12} sm={6}>
             <Card>
               <CardContent>
-                <Typography variant="h6">Temperature & Humidity</Typography>
+                <Typography variant="h6">Temperature (°F)</Typography>
                 <LineChart width={400} height={150} data={mockData}>
                   <CartesianGrid stroke="#eee" strokeDasharray="5 5" />
                   <XAxis dataKey="name" />
                   <YAxis />
                   <Tooltip />
                   <Line type="monotone" dataKey="temperature" stroke="#8884d8" />
+                </LineChart>
+              </CardContent>
+            </Card>
+
+            <Card style={{ marginTop: '15px' }}>
+              <CardContent>
+                <Typography variant="h6">Humidity (%)</Typography>
+                <LineChart width={400} height={150} data={mockData}>
+                  <CartesianGrid stroke="#eee" strokeDasharray="5 5" />
+                  <XAxis dataKey="name" />
+                  <YAxis />
+                  <Tooltip />
                   <Line type="monotone" dataKey="humidity" stroke="#82ca9d" />
                 </LineChart>
               </CardContent>
@@ -192,7 +196,7 @@ function App() {
 
             <Card style={{ marginTop: '15px' }}>
               <CardContent>
-                <Typography variant="h6">Soil Moisture</Typography>
+                <Typography variant="h6">Soil Moisture (%)</Typography>
                 <LineChart width={400} height={150} data={mockData}>
                   <CartesianGrid stroke="#eee" strokeDasharray="5 5" />
                   <XAxis dataKey="name" />
@@ -205,7 +209,7 @@ function App() {
 
             <Card style={{ marginTop: '15px' }}>
               <CardContent>
-                <Typography variant="h6">Light</Typography>
+                <Typography variant="h6">Light (lux)</Typography>
                 <LineChart width={400} height={150} data={mockData}>
                   <CartesianGrid stroke="#eee" strokeDasharray="5 5" />
                   <XAxis dataKey="name" />
@@ -219,9 +223,7 @@ function App() {
         </Grid>
 
         <Box style={{ position: 'fixed', right: '1rem', bottom: '1rem' }}>
-          <Typography variant="body2">
-            Built with React by Drew
-          </Typography>
+          <Typography variant="body2">Built with React by Drew</Typography>
         </Box>
       </Container>
     </ThemeProvider>
