@@ -153,6 +153,8 @@ import { LineChart, Line, CartesianGrid, XAxis, YAxis, Tooltip } from 'recharts'
 import LiveVideo from './components/video';
 import SensorData from './components/sensor';
 import plantLogo from './images/plantLogo.png';
+// import chart.js
+import { Line as LineChart } from 'react-chartjs-2';
 
 const theme = createTheme({
   palette: {
@@ -242,6 +244,8 @@ function App() {
               </CardContent>
             </Card>
 
+
+            {/* take in the json data from the sensors graph */}
             <Card style={{ marginTop: '15px' }}>
               <CardContent>
                 <Typography variant="h6">Humidity (%)</Typography>
