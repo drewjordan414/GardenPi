@@ -1,75 +1,41 @@
+# housekeeping, import 
 from flask import Flask, Response, jsonify
 import cv2
 import board
 import busio 
-from adafruit_seesaw.seesaw import Seesaw
+import adafruit_seesaw
 import adafruit_sht4x
 import adafruit_tsl2591
 from flask_cors import CORS
+import time 
 
 # Initialize I2C sensors 
 i2c = busio.I2C(board.SCL, board.SDA)
-
-# Initialize Seesaw soil sensor
-try:
-    ss = Seesaw(i2c, addr=0x36)
-    ss_available = True
-    print("Seesaw soil sensor initialized.")
-except Exception as e:
-    ss = None
-    ss_available = False
-    print("Failed to initialize Seesaw soil sensor:", str(e))
-
-# Initialize SHT4x temperature and humidity sensor
-try:
-    sht = adafruit_sht4x.SHT4x(i2c)
-    sht_available = True
-    print("SHT4x sensor initialized.")
-except Exception as e:
-    sht = None
-    sht_available = False
-    print("Failed to initialize SHT4x sensor:", str(e))
-
-# Initialize TSL2591 light sensor
-try:
-    tsl = adafruit_tsl2591.TSL2591(i2c)
-    tsl_available = True
-    print("TSL2591 light sensor initialized.")
-except Exception as e:
-    tsl = None
-    tsl_available = False
-    print("Failed to initialize TSL2591 light sensor:", str(e))
-
+ss = adafruit_seesaw.Seesaw(i2c)
+sht = adafruit_sht4x.SHT4x(i2c)
+tsl = adafruit_tsl2591.TSL2591(i2c)
 
 app = Flask(__name__)
 CORS(app)  # Handling CORS for local development
 
 def read_temp():
     """Read the temperature in Fahrenheit from the SHT40."""
-    if sht_available:
-        return sht.temperature * 1.8 + 32
-    else:
-        return None
+    temp = sht.temperature * 1.8 + 32
+    return round(temp, 2)
+
 def read_humidity():
     """Read the humidity from the SHT40."""
-    if sht_available:
-        return sht.relative_humidity
-    else:
-        return None
+    humidity =  sht.relative_humidity
+    return round(humidity, 2)
 
 def read_soil():
     """Read the soil moisture from the soil sensor."""
-    if ss_available:
-        return ss.moisture_read()
-    else:
-        return None
+    return ss.moisture_read()
 
 def read_light():
     """Read the light sensor value."""
-    if tsl_available:
-        return tsl.lux
-    else:
-        return None
+    light = tsl.lux
+    return round(light, 2)
 
 @app.route('/api/sensor_data')
 def sensor_data():
@@ -82,19 +48,54 @@ def sensor_data():
     }
     return jsonify(data)
 
+# def gen():
+#     """Generate the video stream."""
+#     cap = cv2.VideoCapture(0)
+#     # setup the camera and the video feed 
+#     cap = cv2.VideoCapture(0)
+#     while True:
+#         cap.set(cv2.CAP_PROP_FPS, 30)
+#         ret, frame = cap.read()
+#         if not ret:
+#             print("Can't receive frame (stream end?). Exiting ...")
+#             break 
+
+    # while True:
+    #     # set the frame rate to 30fps 
+    #     cap.set(cv2.CAP_PROP_FPS, 30)
+    #     ret, frame = cap.read()
+    #     if not ret:
+    #         print("Can't receive frame (stream end?). Exiting ...")
+    #         break
+        
+    #     # Convert the frame to JPEG and return
+    #     ret, jpeg = cv2.imencode('.jpg', frame)
+    #     yield (b'--frame\r\n'
+    #            b'Content-Type: image/jpeg\r\n\r\n' + jpeg.tobytes() + b'\r\n\r\n')
 def gen():
     """Generate the video stream."""
     cap = cv2.VideoCapture(0)
+    
+    # Reduce resolution for faster processing (e.g., set to 640x480)
+    cap.set(cv2.CAP_PROP_FRAME_WIDTH, 640)
+    cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 480)
+
     while True:
+        start_time = time.time()
+
         ret, frame = cap.read()
         if not ret:
             print("Can't receive frame (stream end?). Exiting ...")
             break
-        
-        # Convert the frame to JPEG and return
-        ret, jpeg = cv2.imencode('.jpg', frame)
+
+        # Increase JPEG compression for smaller frame size, but be aware this might reduce quality
+        encode_param = [int(cv2.IMWRITE_JPEG_QUALITY), 70]  
+        ret, jpeg = cv2.imencode('.jpg', frame, encode_param)
         yield (b'--frame\r\n'
                b'Content-Type: image/jpeg\r\n\r\n' + jpeg.tobytes() + b'\r\n\r\n')
+
+        # Use a fixed time delay to attempt a more consistent frame rate
+        time.sleep(0.0333)
 
 @app.route('/api/video_feed')
 def video_feed():
