@@ -46,6 +46,7 @@ def sensor_data():
         "soil": read_soil(),
         "light": read_light()
     }
+    #send the data to graphs 
     return jsonify(data)
 
 # def gen():
@@ -74,7 +75,7 @@ def sensor_data():
     #            b'Content-Type: image/jpeg\r\n\r\n' + jpeg.tobytes() + b'\r\n\r\n')
 
 
-    
+
 def gen():
     """Generate the video stream."""
     cap = cv2.VideoCapture(0)
