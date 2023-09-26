@@ -72,6 +72,9 @@ def sensor_data():
     #     ret, jpeg = cv2.imencode('.jpg', frame)
     #     yield (b'--frame\r\n'
     #            b'Content-Type: image/jpeg\r\n\r\n' + jpeg.tobytes() + b'\r\n\r\n')
+
+
+    
 def gen():
     """Generate the video stream."""
     cap = cv2.VideoCapture(0)
