@@ -8,6 +8,7 @@
     "@testing-library/jest-dom": "^5.17.0",
     "@testing-library/react": "^11.2.7",
     "@testing-library/user-event": "^13.5.0",
+    "chart.js": "^4.4.0",
     "http-proxy-middleware": "^2.0.6",
     "react": "^17.0.2",
     "react-dom": "^17.0.2",
@@ -21,7 +22,17 @@
     "test": "react-scripts test",
     "eject": "react-scripts eject"
   },
+<<<<<<< HEAD
   
+=======
+  "proxy": {
+    "/api": {
+      "target": "http://localhost:5000",
+      "secure": false,
+      "changeOrigin": true
+    }
+  },
+>>>>>>> 0fcb639f9006db9ec1516e01da83c23bc0fc9ddd
   "eslintConfig": {
     "extends": [
       "react-app",
